@@ -12,11 +12,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.filter.CharacterEncodingFilter;
 
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1")
+@RequestMapping(value = "/api/v1")
 public class LibraryController {
 
     private final LibraryRepository libraryRepository;
@@ -28,7 +30,8 @@ public class LibraryController {
     @GetMapping(value = "/libraries")
     public ResponseEntity<List<LibraryResponse>> getLibrariesInCity(@RequestParam String city) {
 
-        List<Library> libraries = libraryRepository.findAllByCity(city);
+        String decoded = URLDecoder.decode(city, StandardCharsets.UTF_8);
+        List<Library> libraries = libraryRepository.findAllByCity(decoded);
         List<LibraryResponse> libraryResponses = new ArrayList<>();
         for (Library lib : libraries) {
             libraryResponses.add(new LibraryResponse(lib.getLibraryUid(),
@@ -38,12 +41,12 @@ public class LibraryController {
         return new ResponseEntity<>(libraryResponses, HttpStatus.OK);
     }
 
-//    @Bean
-//    CharacterEncodingFilter characterEncodingFilter() {
-//        CharacterEncodingFilter filter = new CharacterEncodingFilter();
-//        filter.setEncoding("UTF-8");
-//        filter.setForceEncoding(true);
-//        return filter;
-//    }
+    @Bean
+    CharacterEncodingFilter characterEncodingFilter() {
+        CharacterEncodingFilter filter = new CharacterEncodingFilter();
+        filter.setEncoding("UTF-8");
+        filter.setForceEncoding(true);
+        return filter;
+    }
 
 }
