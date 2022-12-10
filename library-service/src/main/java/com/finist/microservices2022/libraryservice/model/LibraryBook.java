@@ -13,10 +13,12 @@ import javax.persistence.*;
 @AllArgsConstructor
 public class LibraryBook {
 
+    @OneToOne()
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Getter @Setter
     private Integer bookId;
 
+    @OneToOne
     @Column(name = "library_id")
     @Getter @Setter
     private Integer libraryId;

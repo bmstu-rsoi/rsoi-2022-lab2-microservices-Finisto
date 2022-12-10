@@ -1,5 +1,7 @@
 package com.finist.microservices2022.gatewaylibraryservice.controller;
 
+import com.finist.microservices2022.gatewayapi.model.LibraryBookPaginationResponse;
+import com.finist.microservices2022.gatewayapi.model.LibraryBookResponse;
 import com.finist.microservices2022.gatewayapi.model.LibraryPaginationResponse;
 import com.finist.microservices2022.gatewayapi.model.LibraryResponse;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,6 +27,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -39,16 +42,11 @@ public class GatewayController {
         restTemplate = restTemplateBuilder.build();
     }
 
-//    @Bean
-//    CharacterEncodingFilter characterEncodingFilter() {
-//        CharacterEncodingFilter filter = new CharacterEncodingFilter();
-//        filter.setEncoding("UTF-8");
-//        filter.setForceEncoding(true);
-//        return filter;
-//    }
-
     @GetMapping(value = "/libraries")
-    public ResponseEntity<LibraryPaginationResponse> getLibrariesInCity(@RequestParam String city, @RequestParam Integer page, @RequestParam Integer size) throws UnsupportedEncodingException {
+    public ResponseEntity<LibraryPaginationResponse> getLibrariesInCity(@RequestParam String city,
+                                                                        @RequestParam Integer page,
+                                                                        @RequestParam Integer size)
+            throws UnsupportedEncodingException {
         URI libUri = UriComponentsBuilder.fromHttpUrl(library_url)
                 .path("/api/v1/libraries")
                 .queryParam("city", URLEncoder.encode(city, StandardCharsets.UTF_8))
@@ -75,6 +73,38 @@ public class GatewayController {
         } else {
             return new ResponseEntity<>(respEntity.getStatusCode());
         }
+    }
+
+    @GetMapping("/api/v1/libraries/{libraryUid}/books")
+    public ResponseEntity<LibraryBookPaginationResponse> getBooksInLibrary(@RequestParam String libraryUid, @RequestParam int page,
+                                                                           @RequestParam int size, @RequestParam boolean showAll) {
+        URI libUri = UriComponentsBuilder.fromHttpUrl(library_url)
+                .path("/api/v1/libraries/{}")
+                .queryParam("libUid", libraryUid)
+                .build()
+//                .encode()
+                .toUri();
+
+        ResponseEntity<LibraryBookResponse> respEntity = this.restTemplate.getForEntity(libUri, LibraryBookResponse.class);
+        if (respEntity.getStatusCode() == HttpStatus.OK) {
+            List<LibraryBookResponse> libList = List.of(Objects.requireNonNull(respEntity.getBody()));
+            int totalElems = libList.size();
+            List<LibraryBookResponse> pageLibList = new ArrayList<>();
+            if (totalElems == 0) {
+                return new ResponseEntity<>(new LibraryBookPaginationResponse(page, size, totalElems, pageLibList), HttpStatus.OK);
+            }
+            int pageCount = Math.ceilDiv(totalElems, size);
+            if (pageCount == page) {
+                pageLibList = libList.subList((page - 1) * size, totalElems);
+            } else {
+                pageLibList = libList.subList((page - 1) * size, page * size);
+            }
+            return new ResponseEntity<>(new LibraryBookPaginationResponse(page, size, totalElems, pageLibList), HttpStatus.OK);
+
+        } else {
+            return new ResponseEntity<>(respEntity.getStatusCode());
+        }
+
     }
 
 }

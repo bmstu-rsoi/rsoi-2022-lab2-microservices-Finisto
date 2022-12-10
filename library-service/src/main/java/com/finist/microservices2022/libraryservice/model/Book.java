@@ -39,4 +39,6 @@ public class Book {
     @Getter @Setter
     private String condition;
 
+
+
 }
