@@ -19,6 +19,9 @@
 
 	<modules>
 		<module>gateway-library-service</module>
+		<module>gateway-library-api</module>
+		<module>library-service</module>
+		<module>rating-service</module>
 	</modules>
 
 	<dependencies>

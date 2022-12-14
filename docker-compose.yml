@@ -1,4 +1,4 @@
-version: "3"
+version: "2"
 services:
   postgres:
     image: library/postgres:13
@@ -12,7 +12,7 @@ services:
       - db-data:/var/lib/postgresql/data
       - ./postgres/:/docker-entrypoint-initdb.d/
     ports:
-      - "5432:5432"
+      - "5433:5432"
 
 # TODO добавить сервисы
 

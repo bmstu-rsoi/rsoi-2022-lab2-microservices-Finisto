@@ -23,7 +23,7 @@ public class LibraryController {
 
     private final LibraryRepository libraryRepository;
 
-    public LibraryController(LibraryRepository libraryRepository) {
+    public LibraryController (LibraryRepository libraryRepository) {
         this.libraryRepository = libraryRepository;
     }
 
