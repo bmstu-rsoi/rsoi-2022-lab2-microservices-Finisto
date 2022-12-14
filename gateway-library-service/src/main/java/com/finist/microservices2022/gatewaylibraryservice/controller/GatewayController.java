@@ -10,10 +10,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.http.*;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.StringHttpMessageConverter;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.filter.CharacterEncodingFilter;
 import org.springframework.web.util.UriComponents;
@@ -24,10 +21,7 @@ import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -75,17 +69,17 @@ public class GatewayController {
         }
     }
 
-    @GetMapping("/api/v1/libraries/{libraryUid}/books")
-    public ResponseEntity<LibraryBookPaginationResponse> getBooksInLibrary(@RequestParam String libraryUid, @RequestParam int page,
+    @GetMapping("/libraries/{libraryUid}/books")
+    public ResponseEntity<LibraryBookPaginationResponse> getBooksInLibrary(@PathVariable String libraryUid, @RequestParam int page,
                                                                            @RequestParam int size, @RequestParam boolean showAll) {
         URI libUri = UriComponentsBuilder.fromHttpUrl(library_url)
-                .path("/api/v1/libraries/{}")
+                .path("/api/v1/books")
                 .queryParam("libUid", libraryUid)
                 .build()
 //                .encode()
                 .toUri();
 
-        ResponseEntity<LibraryBookResponse> respEntity = this.restTemplate.getForEntity(libUri, LibraryBookResponse.class);
+        ResponseEntity<LibraryBookResponse[]> respEntity = this.restTemplate.getForEntity(libUri, LibraryBookResponse[].class);
         if (respEntity.getStatusCode() == HttpStatus.OK) {
             List<LibraryBookResponse> libList = List.of(Objects.requireNonNull(respEntity.getBody()));
             int totalElems = libList.size();

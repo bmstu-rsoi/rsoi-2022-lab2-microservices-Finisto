@@ -16,12 +16,12 @@ public class LibraryBook {
     @OneToOne()
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Getter @Setter
-    private Integer bookId;
+    private Book bookId;
 
     @OneToOne
     @Column(name = "library_id")
     @Getter @Setter
-    private Integer libraryId;
+    private Library libraryId;
 
     @Column(name = "available_count")
     @Getter @Setter
