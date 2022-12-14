@@ -11,6 +11,7 @@ CREATE TABLE reservation
     start_date      TIMESTAMP   NOT NULL,
     till_date       TIMESTAMP   NOT NULL
 );
+GRANT ALL PRIVILEGES ON TABLE reservation TO program;
 
 \c libraries
 CREATE TABLE library
@@ -39,6 +40,9 @@ CREATE TABLE library_books
     library_id      INT REFERENCES library (id),
     available_count INT NOT NULL
 );
+GRANT ALL PRIVILEGES ON TABLE library TO program;
+GRANT ALL PRIVILEGES ON TABLE books TO program;
+GRANT ALL PRIVILEGES ON TABLE library_books TO program;
 
 \c ratings
 CREATE TABLE rating
@@ -48,9 +52,5 @@ CREATE TABLE rating
     stars    INT         NOT NULL
         CHECK (stars BETWEEN 0 AND 100)
 );
-
-GRANT ALL PRIVILEGES ON TABLE reservation TO program;
-GRANT ALL PRIVILEGES ON TABLE library TO program;
-GRANT ALL PRIVILEGES ON TABLE books TO program;
-GRANT ALL PRIVILEGES ON TABLE library_books TO program;
 GRANT ALL PRIVILEGES ON TABLE rating TO program;
+
