@@ -2,8 +2,10 @@ package com.finist.microservices2022.libraryservice.controller;
 
 import com.finist.microservices2022.gatewayapi.model.LibraryBookResponse;
 import com.finist.microservices2022.gatewayapi.model.LibraryResponse;
+import com.finist.microservices2022.libraryservice.model.Book;
 import com.finist.microservices2022.libraryservice.model.Library;
 import com.finist.microservices2022.libraryservice.model.LibraryBook;
+import com.finist.microservices2022.libraryservice.repository.BookRepository;
 import com.finist.microservices2022.libraryservice.repository.LibraryBookRepository;
 import com.finist.microservices2022.libraryservice.repository.LibraryRepository;
 import org.springframework.context.annotation.Bean;
@@ -27,11 +29,16 @@ public class LibraryController {
 
     private final LibraryRepository libraryRepository;
     private final LibraryBookRepository libraryBookRepository;
+    private final BookRepository bookRepository;
 
-    public LibraryController (LibraryRepository libraryRepository, LibraryBookRepository libraryBookRepository) {
+    public LibraryController (LibraryRepository libraryRepository,
+                              LibraryBookRepository libraryBookRepository,
+                              BookRepository bookRepository) {
 
         this.libraryRepository = libraryRepository;
         this.libraryBookRepository = libraryBookRepository;
+        this.bookRepository = bookRepository;
+
     }
 
     @GetMapping(value = "/libraries")

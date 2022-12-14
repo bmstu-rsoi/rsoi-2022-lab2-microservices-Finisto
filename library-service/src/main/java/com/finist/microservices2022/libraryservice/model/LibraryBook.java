@@ -7,19 +7,25 @@ import lombok.Setter;
 
 import javax.persistence.*;
 
-//@Entity fixme add id field or not
+@Entity
 @Table(name = "library_books")
 @NoArgsConstructor
 @AllArgsConstructor
 public class LibraryBook {
 
-    @OneToOne()
+    @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
+    @Getter @Setter
+    private Integer id;
+
+
+    @OneToOne
+    @JoinColumn(name = "book_id")
     @Getter @Setter
     private Book bookId;
 
     @OneToOne
-    @Column(name = "library_id")
+    @JoinColumn(name = "library_id")
     @Getter @Setter
     private Library libraryId;
 

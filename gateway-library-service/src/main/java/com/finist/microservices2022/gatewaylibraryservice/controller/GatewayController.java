@@ -81,7 +81,12 @@ public class GatewayController {
 
         ResponseEntity<LibraryBookResponse[]> respEntity = this.restTemplate.getForEntity(libUri, LibraryBookResponse[].class);
         if (respEntity.getStatusCode() == HttpStatus.OK) {
-            List<LibraryBookResponse> libList = List.of(Objects.requireNonNull(respEntity.getBody()));
+            List<LibraryBookResponse> libList = new ArrayList<>(List.of(Objects.requireNonNull(respEntity.getBody())));
+
+            if(!showAll){ // don't show books where availableCount == 0
+                libList.removeIf(lbr -> (lbr.availableCount == 0));
+            }
+
             int totalElems = libList.size();
             List<LibraryBookResponse> pageLibList = new ArrayList<>();
             if (totalElems == 0) {

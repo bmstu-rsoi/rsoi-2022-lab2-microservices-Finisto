@@ -36,6 +36,7 @@ CREATE TABLE books
 
 CREATE TABLE library_books
 (
+    id       SERIAL PRIMARY KEY,
     book_id         INT REFERENCES books (id),
     library_id      INT REFERENCES library (id),
     available_count INT NOT NULL

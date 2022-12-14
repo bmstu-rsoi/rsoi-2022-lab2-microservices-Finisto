@@ -39,6 +39,10 @@ public class Book {
     @Getter @Setter
     private String condition;
 
+//    @OneToOne
+//    @JoinColumn(name = "library_id", nullable = false)
+//    @Getter @Setter
+//    private Library libraryId;
 
 
 }
