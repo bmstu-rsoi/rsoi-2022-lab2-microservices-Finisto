@@ -6,10 +6,7 @@ import com.finist.microservices2022.ratingservice.model.Rating;
 import com.finist.microservices2022.ratingservice.repository.RatingRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -32,5 +29,20 @@ public class RatingController {
         else{
             return new ResponseEntity<ErrorResponse>(new ErrorResponse("User with username '%s' not found".formatted(username)), HttpStatus.NOT_FOUND);
         }
+    }
+
+    @PostMapping("/rating/edit")
+    public ResponseEntity<?> editUserRatingByOffset(@RequestParam String username, @RequestParam Integer offset){
+        Rating rating = ratingRepository.getRatingByUsername(username);
+        int newRating = rating.getStars() + offset;
+        if(newRating < 0)
+            newRating = 0;
+        if(newRating > 100)
+            newRating = 100;
+
+        rating.setStars(newRating);
+        ratingRepository.save(rating);
+
+        return new ResponseEntity<>(newRating, HttpStatus.OK);
     }
 }

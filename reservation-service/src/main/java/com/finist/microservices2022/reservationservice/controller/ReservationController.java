@@ -76,4 +76,28 @@ public class ReservationController {
                 newReservation.getTillDate()
         ), HttpStatus.OK);
     }
+
+
+    @GetMapping("/reservation")
+    public ResponseEntity<UserReservationResponse> getUserReservation(@RequestParam UUID reservationUid){
+        Reservation reservation = reservationRepository.getReservationByReservationUid(reservationUid);
+        UserReservationResponse urr = new UserReservationResponse(
+                reservation.getReservationUid().toString(),
+                reservation.getBookUid().toString(),
+                reservation.getLibraryUid().toString(),
+                reservation.getStatus(),
+                reservation.getStartDate(),
+                reservation.getTillDate()
+        );
+        return new ResponseEntity<>(urr, HttpStatus.OK);
+
+    }
+
+    @PostMapping("/changeStatus")
+    public ResponseEntity<?> changeReservationStatus(@RequestParam UUID reservationUid, @RequestParam String status){
+        Reservation reservation = reservationRepository.getReservationByReservationUid(reservationUid);
+        reservation.setStatus(status);
+        reservationRepository.save(reservation);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
 }

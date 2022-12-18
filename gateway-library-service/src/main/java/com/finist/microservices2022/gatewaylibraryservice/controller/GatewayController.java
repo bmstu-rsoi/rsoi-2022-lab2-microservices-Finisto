@@ -1,24 +1,16 @@
 package com.finist.microservices2022.gatewaylibraryservice.controller;
 
 import com.finist.microservices2022.gatewayapi.model.*;
-import com.finist.microservices2022.gatewaylibraryservice.handler.RestTemplateResponseErrorHandler;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.context.annotation.Bean;
 import org.springframework.http.*;
-import org.springframework.http.converter.HttpMessageConverter;
-import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.filter.CharacterEncodingFilter;
-import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLEncoder;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -159,7 +151,7 @@ public class GatewayController {
             UserReservationResponse userReservationResponse = postUserReservationEntry(userName, requestBody);
 
             // decrease available count in Library system
-            postDecreaseAvailableCountByCount(requestBody.getBookUid(), 1);
+            editAvailableCountByCountRequest(requestBody.getBookUid(), -1);
 
             // get book info
             BookInfo bookInfo = getBookInfo(requestBody.getBookUid());
@@ -217,6 +209,60 @@ public class GatewayController {
     }
 
 
+    @PostMapping("/reservations/{reservationUid}/return")
+    public ResponseEntity<?> returnBookToLibrary(@PathVariable UUID reservationUid,
+                                                @RequestHeader(name = "X-User-Name") String userName,
+                                                @RequestBody ReturnBookRequest requestBody){
+
+        // check if reservation exist
+        UserReservationResponse userReservationResponse = getUserReservationResponse(reservationUid);
+        if(userReservationResponse == null){
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+
+        // change reservation status
+        String newStatus = (requestBody.getDate().after(userReservationResponse.getTillDate())) ? "EXPIRED" : "RETURNED";
+        changeReservationStatusRequest(newStatus, reservationUid);
+
+        // increase available count in library system
+        editAvailableCountByCountRequest(userReservationResponse.getBookUid(), 1);
+
+        // get old info of book
+        LibraryBookResponse libraryBook = getLibraryBookResponseRequest(userReservationResponse.getBookUid());
+        String oldCondition = libraryBook.getCondition();
+
+        // update condition of book
+        String newCondition = editBookConditionRequest(userReservationResponse.getBookUid(), requestBody.getCondition());
+
+        Integer ratingOffset = 0;
+        // check if expired
+        if(newStatus == "EXPIRED")
+            ratingOffset -= 10;
+
+        // check if condition decreased and decrease rating for each condition
+        switch (oldCondition) {
+            case "EXCELLENT" -> ratingOffset -= 20;
+            case "GOOD" -> ratingOffset -= 10;
+        }
+        switch (newCondition){
+            case "EXCELLENT" -> ratingOffset += 20;
+            case "GOOD" -> ratingOffset += 10;
+        }
+
+        // if not expired and condition has not decreased
+        if(!newStatus.equals("EXPIRED") && ratingOffset >= 0){
+            // then increase rating by 1 star
+            ratingOffset += 1;
+        }
+
+        // edit user rating by ratingOffset
+        Integer newRating = editUserRatingByOffset(userName, ratingOffset);
+
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+
+    }
+
+
 
     private UserRatingResponse getUserRatingResponse(String userName) {
         URI ratingUri = UriComponentsBuilder.fromHttpUrl(rating_url)
@@ -230,6 +276,19 @@ public class GatewayController {
         return respEntity.getBody();
     }
 
+    private Integer editUserRatingByOffset(String userName, Integer offset) {
+        URI ratingUri = UriComponentsBuilder.fromHttpUrl(rating_url)
+                .path("/api/v1/rating/edit")
+                .queryParam("username", userName)
+                .queryParam("offset", offset)
+                .build()
+//                .encode()
+                .toUri();
+        ResponseEntity<Integer> respEntity = null;
+        respEntity = this.restTemplate.postForEntity(ratingUri, null, Integer.class);
+        return respEntity.getBody();
+    }
+
     private List<UserReservationResponse> getUserReservationsResponse(String userName) {
         URI reservationUri = UriComponentsBuilder.fromHttpUrl(reservation_url)
                 .path("/api/v1/reservations")
@@ -240,6 +299,18 @@ public class GatewayController {
         ResponseEntity<UserReservationResponse[]> respEntity = null;
         respEntity = this.restTemplate.getForEntity(reservationUri, UserReservationResponse[].class);
         return new ArrayList<>(List.of(Objects.requireNonNull(respEntity.getBody())));
+    }
+
+    private UserReservationResponse getUserReservationResponse(UUID reservationUid) {
+        URI reservationUri = UriComponentsBuilder.fromHttpUrl(reservation_url)
+                .path("/api/v1/reservation")
+                .queryParam("reservationUid", reservationUid)
+                .build()
+//                .encode()
+                .toUri();
+        ResponseEntity<UserReservationResponse> respEntity = null;
+        respEntity = this.restTemplate.getForEntity(reservationUri, UserReservationResponse.class);
+        return respEntity.getBody();
     }
 
     private UserReservationResponse postUserReservationEntry(String userName, TakeBookRequest request){
@@ -257,9 +328,23 @@ public class GatewayController {
 //        return new ArrayList<>(List.of(Objects.requireNonNull(respEntity.getBody())));
     }
 
-    private void postDecreaseAvailableCountByCount(String bookUid, Integer byCount){
+    private UserReservationResponse changeReservationStatusRequest(String status, UUID reservationUid){
+        URI reservationUri = UriComponentsBuilder.fromHttpUrl(reservation_url)
+                .path("/api/v1/changeStatus")
+                .queryParam("status", status)
+                .queryParam("reservationUid", reservationUid)
+                .build()
+//                .encode()
+                .toUri();
+        ResponseEntity<UserReservationResponse> respEntity = null;
+        respEntity = this.restTemplate.postForEntity(reservationUri, null, UserReservationResponse.class);
+
+        return respEntity.getBody();
+    }
+
+    private void editAvailableCountByCountRequest(String bookUid, Integer byCount){
         URI libraryUri = UriComponentsBuilder.fromHttpUrl(library_url)
-                .path("/api/v1/decreaseAvailableCount")
+                .path("/api/v1/editAvailableCount")
 //                ...
 //                .queryParam("bookUid", bookUid)
 //                .queryParam("byCount", byCount)
@@ -276,6 +361,20 @@ public class GatewayController {
 
         return;
     }
+
+    private String editBookConditionRequest(String bookUid, String condition){
+        URI libraryUri = UriComponentsBuilder.fromHttpUrl(library_url)
+                .path("/api/v1/book/editCondition")
+                .queryParam("bookUid", bookUid)
+                .queryParam("condition", condition)
+                .build()
+//                .encode()
+                .toUri();
+        ResponseEntity<String> respEntity = null;
+        respEntity = this.restTemplate.postForEntity(libraryUri, null, String.class);
+        return respEntity.getBody();
+    }
+
 
     private BookInfo getBookInfo(String bookUid){
         URI libraryUri = UriComponentsBuilder.fromHttpUrl(library_url)
@@ -299,6 +398,19 @@ public class GatewayController {
                 .toUri();
         ResponseEntity<LibraryResponse> respEntity = null;
         respEntity = this.restTemplate.getForEntity(libraryUri, LibraryResponse.class);
+
+        return respEntity.getBody();
+    }
+
+    private LibraryBookResponse getLibraryBookResponseRequest(String bookUid){
+        URI libraryUri = UriComponentsBuilder.fromHttpUrl(library_url)
+                .path("/api/v1/libraryBook")
+                .queryParam("bookUid", bookUid)
+                .build()
+//                .encode()
+                .toUri();
+        ResponseEntity<LibraryBookResponse> respEntity = null;
+        respEntity = this.restTemplate.getForEntity(libraryUri, LibraryBookResponse.class);
 
         return respEntity.getBody();
     }

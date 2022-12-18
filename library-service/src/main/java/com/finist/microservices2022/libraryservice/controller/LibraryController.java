@@ -73,16 +73,25 @@ public class LibraryController {
     }
 
 
-    @PostMapping("/decreaseAvailableCount")
-    public ResponseEntity<Integer> decreaseAvailableCount(@RequestBody EditAvailableCountRequest requestBody){
+    @PostMapping("/editAvailableCount")
+    public ResponseEntity<Integer> editAvailableCount(@RequestBody EditAvailableCountRequest requestBody){
         String bookUid = requestBody.getBookUid();
         Integer byCount = requestBody.getByCount();
         Book book = bookRepository.findBookByBookUid(UUID.fromString(bookUid));
         LibraryBook lb = libraryBookRepository.findLibraryBookByBookId(book);
-        lb.setAvailableCount(lb.getAvailableCount() - byCount);
+        Integer newCount = lb.getAvailableCount() + byCount;
+        lb.setAvailableCount(newCount);
         libraryBookRepository.save(lb);
 
-        return new ResponseEntity<Integer>(lb.getAvailableCount() - byCount, HttpStatus.OK);
+        return new ResponseEntity<Integer>(newCount, HttpStatus.OK);
+    }
+
+    @PostMapping("/book/editCondition")
+    public ResponseEntity<String> editBookCondition(@RequestParam UUID bookUid, @RequestParam String condition){
+        Book book = bookRepository.findBookByBookUid(bookUid);
+        book.setCondition(condition);
+        bookRepository.save(book);
+        return new ResponseEntity<>(book.getCondition(), HttpStatus.OK);
     }
 
 
@@ -102,6 +111,21 @@ public class LibraryController {
 
         return new ResponseEntity<>(libraryResponse, HttpStatus.OK);
 
+    }
+
+    @GetMapping("/libraryBook")
+    public ResponseEntity<LibraryBookResponse> getLibraryBook(@RequestParam UUID bookUid){
+        Book book = bookRepository.findBookByBookUid(bookUid);
+        LibraryBook libraryBook = libraryBookRepository.findLibraryBookByBookId(book);
+        LibraryBookResponse lbr = new LibraryBookResponse(
+                book.getBookUid().toString(),
+                book.getName(),
+                book.getAuthor(),
+                book.getGenre(),
+                book.getCondition(),
+                libraryBook.getAvailableCount()
+        );
+        return new ResponseEntity<>(lbr, HttpStatus.OK);
     }
 
 
