@@ -1,5 +1,6 @@
 package com.finist.microservices2022.ratingservice.controller;
 
+import com.finist.microservices2022.gatewayapi.model.ErrorResponse;
 import com.finist.microservices2022.gatewayapi.model.UserRatingResponse;
 import com.finist.microservices2022.ratingservice.model.Rating;
 import com.finist.microservices2022.ratingservice.repository.RatingRepository;
@@ -22,14 +23,14 @@ public class RatingController {
 
 
     @GetMapping("/rating")
-    public ResponseEntity<UserRatingResponse> getUserRating(@RequestParam String username){
+    public ResponseEntity<?> getUserRating(@RequestParam String username){
         Rating ratingEntity = ratingRepository.getRatingByUsername(username);
 
         if(ratingEntity != null){
             return new ResponseEntity<UserRatingResponse>(new UserRatingResponse(ratingEntity.getStars()), HttpStatus.OK);
         }
         else{
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            return new ResponseEntity<ErrorResponse>(new ErrorResponse("User with username '%s' not found".formatted(username)), HttpStatus.NOT_FOUND);
         }
     }
 }

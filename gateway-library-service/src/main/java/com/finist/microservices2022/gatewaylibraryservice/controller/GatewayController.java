@@ -1,6 +1,7 @@
 package com.finist.microservices2022.gatewaylibraryservice.controller;
 
 import com.finist.microservices2022.gatewayapi.model.*;
+import com.finist.microservices2022.gatewaylibraryservice.handler.RestTemplateResponseErrorHandler;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
@@ -8,6 +9,7 @@ import org.springframework.http.*;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.filter.CharacterEncodingFilter;
 import org.springframework.web.util.UriComponents;
@@ -37,7 +39,9 @@ public class GatewayController {
     private final RestTemplate restTemplate;
 
     public GatewayController(RestTemplateBuilder restTemplateBuilder) {
-        restTemplate = restTemplateBuilder.build();
+        restTemplate = restTemplateBuilder
+//                .errorHandler(new RestTemplateResponseErrorHandler())
+                .build();
     }
 
     @GetMapping(value = "/libraries")
@@ -112,7 +116,7 @@ public class GatewayController {
 
 
     @GetMapping("/rating")
-    public ResponseEntity<UserRatingResponse> getUserRating(@RequestHeader(name = "X-User-Name") String userName){
+    public ResponseEntity<?> getUserRating(@RequestHeader(name = "X-User-Name") String userName) {
         URI ratingUri = UriComponentsBuilder.fromHttpUrl(rating_url)
                 .path("/api/v1/rating")
                 .queryParam("username", userName)
@@ -120,13 +124,19 @@ public class GatewayController {
 //                .encode()
                 .toUri();
 
-        ResponseEntity<UserRatingResponse> respEntity = this.restTemplate.getForEntity(ratingUri, UserRatingResponse.class);
-        if (respEntity.getStatusCode() == HttpStatus.OK) {
-            return new ResponseEntity<>(respEntity.getBody(), HttpStatus.OK);
+        ResponseEntity<?> respEntity = null;
+        try {
+            respEntity = this.restTemplate.getForEntity(ratingUri, UserRatingResponse.class);
+            if (respEntity.getStatusCode() == HttpStatus.OK) {
+                return new ResponseEntity<UserRatingResponse>((UserRatingResponse) respEntity.getBody(), HttpStatus.OK);
 
-        } else {
-            return new ResponseEntity<>(respEntity.getStatusCode());
+            } else {
+                return new ResponseEntity<>(respEntity.getStatusCode());
+            }
+        } catch (Exception ex) {
+            return new ResponseEntity<ErrorResponse>(new ErrorResponse(ex.getMessage()), HttpStatus.NOT_FOUND);
         }
+
     }
 
 }
