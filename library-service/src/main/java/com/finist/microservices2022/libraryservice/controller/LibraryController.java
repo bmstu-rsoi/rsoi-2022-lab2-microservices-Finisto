@@ -1,5 +1,7 @@
 package com.finist.microservices2022.libraryservice.controller;
 
+import com.finist.microservices2022.gatewayapi.model.BookInfo;
+import com.finist.microservices2022.gatewayapi.model.EditAvailableCountRequest;
 import com.finist.microservices2022.gatewayapi.model.LibraryBookResponse;
 import com.finist.microservices2022.gatewayapi.model.LibraryResponse;
 import com.finist.microservices2022.libraryservice.model.Book;
@@ -11,10 +13,7 @@ import com.finist.microservices2022.libraryservice.repository.LibraryRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.filter.CharacterEncodingFilter;
 
 import java.net.URLDecoder;
@@ -72,6 +71,39 @@ public class LibraryController {
 
         return new ResponseEntity<>(libraryBookResponses, HttpStatus.OK);
     }
+
+
+    @PostMapping("/decreaseAvailableCount")
+    public ResponseEntity<Integer> decreaseAvailableCount(@RequestBody EditAvailableCountRequest requestBody){
+        String bookUid = requestBody.getBookUid();
+        Integer byCount = requestBody.getByCount();
+        Book book = bookRepository.findBookByBookUid(UUID.fromString(bookUid));
+        LibraryBook lb = libraryBookRepository.findLibraryBookByBookId(book);
+        lb.setAvailableCount(lb.getAvailableCount() - byCount);
+        libraryBookRepository.save(lb);
+
+        return new ResponseEntity<Integer>(lb.getAvailableCount() - byCount, HttpStatus.OK);
+    }
+
+
+    @GetMapping("/book")
+    public ResponseEntity<BookInfo> getBook(@RequestParam String bookUid){
+        Book book = bookRepository.findBookByBookUid(UUID.fromString(bookUid));
+        BookInfo bookInfo = new BookInfo(book.getBookUid().toString(), book.getName(), book.getAuthor(), book.getGenre());
+
+        return new ResponseEntity<>(bookInfo, HttpStatus.OK);
+    }
+
+    @GetMapping("/library")
+    public ResponseEntity<LibraryResponse> getLibrary(@RequestParam String libraryUid){
+        Library library = libraryRepository.getLibraryByLibraryUid(UUID.fromString(libraryUid));
+        LibraryResponse libraryResponse = new LibraryResponse(library.getLibraryUid(), library.getName(),
+                library.getAddress(), library.getCity());
+
+        return new ResponseEntity<>(libraryResponse, HttpStatus.OK);
+
+    }
+
 
     @Bean
     CharacterEncodingFilter characterEncodingFilter() {

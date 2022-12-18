@@ -8,4 +8,5 @@ import java.util.UUID;
 
 public interface BookRepository extends JpaRepository<Book, Integer> {
 
+    Book findBookByBookUid(UUID bookUid);
 }
