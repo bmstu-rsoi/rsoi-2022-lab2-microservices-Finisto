@@ -2,7 +2,7 @@ version: "2"
 services:
   postgres:
     image: library/postgres:13
-    container_name: postgres
+    container_name: postgres-rsoi
     restart: on-failure
     environment:
       POSTGRES_USER: postgres
