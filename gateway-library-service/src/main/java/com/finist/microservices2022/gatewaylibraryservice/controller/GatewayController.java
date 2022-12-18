@@ -185,6 +185,39 @@ public class GatewayController {
 
     }
 
+    @GetMapping("/reservations")
+    public ResponseEntity<List<BookReservationResponse>> getAllReservations(@RequestHeader(name = "X-User-Name") String userName){
+        URI reservationUri = UriComponentsBuilder.fromHttpUrl(reservation_url)
+                .path("/api/v1/reservations")
+                .queryParam("username", userName)
+                .build()
+//                .encode()
+                .toUri();
+        ResponseEntity<UserReservationResponse[]> respEntity = null;
+        respEntity = this.restTemplate.getForEntity(reservationUri, UserReservationResponse[].class);
+        List<UserReservationResponse> reservationResponseList = new ArrayList<>(List.of(Objects.requireNonNull(respEntity.getBody())));
+
+        List<BookReservationResponse> bookReservationResponseList = new ArrayList<>();
+        DateFormat outFormatter = new SimpleDateFormat("yyyy-MM-dd");
+        for(UserReservationResponse urr : reservationResponseList){
+            BookInfo book = getBookInfo(urr.getBookUid());
+            LibraryResponse library = getLibraryResponse(urr.getLibraryUid());
+
+            bookReservationResponseList.add(new BookReservationResponse(
+                    UUID.fromString(urr.getReservationUid()),
+                    urr.getStatus(),
+                    outFormatter.format(urr.getStartDate()),
+                    outFormatter.format(urr.getTillDate()),
+                    book,
+                    library
+            ));
+        }
+
+        return new ResponseEntity<>(bookReservationResponseList, HttpStatus.OK);
+    }
+
+
+
     private UserRatingResponse getUserRatingResponse(String userName) {
         URI ratingUri = UriComponentsBuilder.fromHttpUrl(rating_url)
                 .path("/api/v1/rating")
