@@ -1,9 +1,6 @@
 package com.finist.microservices2022.gatewaylibraryservice.controller;
 
-import com.finist.microservices2022.gatewayapi.model.LibraryBookPaginationResponse;
-import com.finist.microservices2022.gatewayapi.model.LibraryBookResponse;
-import com.finist.microservices2022.gatewayapi.model.LibraryPaginationResponse;
-import com.finist.microservices2022.gatewayapi.model.LibraryResponse;
+import com.finist.microservices2022.gatewayapi.model.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
@@ -29,6 +26,13 @@ public class GatewayController {
 
     @Value("${services.library-url}")
     private String library_url;
+
+    @Value("${services.rating-url}")
+    private String rating_url;
+
+    @Value("${services.reservation-url}")
+    private String reservation_url;
+
 
     private final RestTemplate restTemplate;
 
@@ -104,6 +108,25 @@ public class GatewayController {
             return new ResponseEntity<>(respEntity.getStatusCode());
         }
 
+    }
+
+
+    @GetMapping("/rating")
+    public ResponseEntity<UserRatingResponse> getUserRating(@RequestHeader(name = "X-User-Name") String userName){
+        URI ratingUri = UriComponentsBuilder.fromHttpUrl(rating_url)
+                .path("/api/v1/rating")
+                .queryParam("username", userName)
+                .build()
+//                .encode()
+                .toUri();
+
+        ResponseEntity<UserRatingResponse> respEntity = this.restTemplate.getForEntity(ratingUri, UserRatingResponse.class);
+        if (respEntity.getStatusCode() == HttpStatus.OK) {
+            return new ResponseEntity<>(respEntity.getBody(), HttpStatus.OK);
+
+        } else {
+            return new ResponseEntity<>(respEntity.getStatusCode());
+        }
     }
 
 }
