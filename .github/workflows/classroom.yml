@@ -23,7 +23,7 @@ jobs:
           java-version: '19'
           distribution: 'temurin'
       - name: Maven Package
-        run: mvn -B clean package
+        run: mvn clean --batch-mode --update-snapshots verify
 
       - name: Build images
         timeout-minutes: 10
