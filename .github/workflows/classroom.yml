@@ -17,7 +17,13 @@ jobs:
 
       - uses: docker/setup-buildx-action@v2
 
-      # TODO build and run unit tests
+      - name: Set up JDK 19
+        uses: actions/setup-java@v3
+        with:
+          java-version: '19'
+          distribution: 'temurin'
+      - name: Maven Package
+        run: mvn -B clean package
 
       - name: Build images
         timeout-minutes: 10
@@ -29,7 +35,7 @@ jobs:
           docker compose up -d
           ./scripts/wait-script.sh
         env:
-          - WAIT_PORTS=8080,8070,8060,8050
+          WAIT_PORTS: 8080,8070,8060,8050
 
       - name: Run API Tests
         uses: matt-ball/newman-action@master
