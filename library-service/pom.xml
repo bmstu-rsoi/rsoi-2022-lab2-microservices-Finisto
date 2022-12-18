@@ -3,12 +3,13 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.7.5</version>
-        <relativePath/> <!-- lookup parent from repository -->
+        <groupId>com.finist.microservices2022</groupId>
+        <artifactId>rsoi-2022-lab2-microservices-Finisto</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+        <!--        <relativePath/> &lt;!&ndash; lookup parent from repository &ndash;&gt;-->
+
     </parent>
-    <groupId>com.finist.microservices2022</groupId>
+<!--    <groupId>com.finist.microservices2022</groupId>-->
     <artifactId>library-service</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>library-service</name>

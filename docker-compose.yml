@@ -12,9 +12,40 @@ services:
       - db-data:/var/lib/postgresql/data
       - ./postgres/:/docker-entrypoint-initdb.d/
     ports:
-      - "5433:5432"
+      - "5432:5432"
 
-# TODO добавить сервисы
-
+# сервисы
+  gateway:
+    image: finisto/gateway-service
+    build: ./gateway-library-service
+    container_name: gateway-service
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+  library:
+    image: finisto/library-service
+    build: ./library-service
+    container_name: library-service
+    ports:
+      - "8060:8060"
+    depends_on:
+      - postgres
+  rating:
+    image: finisto/rating-service
+    build: ./rating-service
+    container_name: rating-service
+    ports:
+      - "8050:8050"
+    depends_on:
+      - postgres
+  reservation:
+    image: finisto/reservation-service
+    build: ./reservation-service
+    container_name: reservation-service
+    ports:
+      - "8070:8070"
+    depends_on:
+      - postgres
 volumes:
   db-data:
